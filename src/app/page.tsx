@@ -32,11 +32,11 @@ export default async function HomePage() {
     <>
       <AppHeader title={community.name} subtitle={APP_TAGLINE} />
       <main className="flex flex-1 flex-col gap-5 px-4 py-5">
-        <section className="rounded-2xl bg-[var(--brand)] px-4 py-5 text-white">
+        <section className="rounded-2xl bg-[var(--brand)] px-4 py-5">
           <p className="text-sm text-white/80">
             Hola, {user.name} · {roleLabel[membership.role]}
           </p>
-          <h2 className="mt-1 text-2xl font-bold">
+          <h2 className="mt-1 text-2xl font-bold text-white">
             {openCases.length} asunto{openCases.length === 1 ? "" : "s"} abierto
             {openCases.length === 1 ? "" : "s"}
           </h2>
@@ -47,7 +47,7 @@ export default async function HomePage() {
           </p>
           <Link
             href="/incidencias/nueva"
-            className="mt-4 inline-flex min-h-12 items-center justify-center rounded-xl bg-white px-4 text-sm font-bold text-[var(--brand)]"
+            className="mt-4 inline-flex min-h-12 items-center justify-center rounded-xl bg-white px-4 text-sm font-bold text-[#0f766e]"
           >
             + Comunicar incidencia
           </Link>
