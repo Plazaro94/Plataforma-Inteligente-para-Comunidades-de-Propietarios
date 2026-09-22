@@ -9,10 +9,13 @@ type PageProps = {
 export default async function EnviadoPage({ searchParams }: PageProps) {
   const { email } = await searchParams;
   const normalized = email?.trim().toLowerCase() ?? "";
-  const isDev = process.env.NODE_ENV === "development";
+  const showDevLink =
+    !process.env.EMAIL_SERVER ||
+    process.env.EMAIL_SERVER === "smtp://127.0.0.1:1025" ||
+    process.env.NODE_ENV === "development";
 
   const magic =
-    isDev && normalized
+    showDevLink && normalized
       ? await prisma.devMagicLink.findUnique({ where: { email: normalized } })
       : null;
 
@@ -28,10 +31,10 @@ export default async function EnviadoPage({ searchParams }: PageProps) {
         {magic?.url ? (
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
             <p className="text-sm font-semibold text-[var(--brand)]">
-              Modo desarrollo
+              Acceso directo (sin email configurado)
             </p>
             <p className="mt-1 text-sm text-[var(--muted)]">
-              No hace falta buzón real. Usa este enlace:
+              Todavía no hay servidor de correo. Usa este enlace para entrar:
             </p>
             <Link
               href={magic.url}
