@@ -2,14 +2,15 @@ import Link from "next/link";
 import { AppHeader } from "@/components/AppHeader";
 import { BottomNav } from "@/components/BottomNav";
 import { CaseCard } from "@/components/CaseCard";
-import { ensureDemoCommunity } from "@/lib/demo";
 import { prisma } from "@/lib/db";
-import { APP_TAGLINE } from "@/lib/labels";
+import { APP_TAGLINE, roleLabel } from "@/lib/labels";
+import { canManageInvites, requireMembership } from "@/lib/session";
+import { signOut } from "@/auth";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const community = await ensureDemoCommunity();
+  const { user, membership, community } = await requireMembership();
   const openCases = await prisma.expediente.findMany({
     where: {
       communityId: community.id,
@@ -23,13 +24,16 @@ export default async function HomePage() {
   });
 
   const stalled = openCases.filter((item) => !item.nextAction || !item.assigneeId);
+  const canInvite = canManageInvites(membership.role);
 
   return (
     <>
       <AppHeader title={community.name} subtitle={APP_TAGLINE} />
       <main className="flex flex-1 flex-col gap-5 px-4 py-5">
         <section className="rounded-2xl bg-[var(--brand)] px-4 py-5 text-white">
-          <p className="text-sm text-white/80">Resumen</p>
+          <p className="text-sm text-white/80">
+            Hola, {user.name} · {roleLabel[membership.role]}
+          </p>
           <h2 className="mt-1 text-2xl font-bold">
             {openCases.length} asunto{openCases.length === 1 ? "" : "s"} abierto
             {openCases.length === 1 ? "" : "s"}
@@ -45,6 +49,30 @@ export default async function HomePage() {
           >
             + Comunicar incidencia
           </Link>
+        </section>
+
+        <section className="flex flex-wrap gap-2">
+          {canInvite ? (
+            <Link
+              href="/comunidad/invitar"
+              className="inline-flex min-h-11 items-center rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-sm font-semibold"
+            >
+              Invitar vecinos
+            </Link>
+          ) : null}
+          <form
+            action={async () => {
+              "use server";
+              await signOut({ redirectTo: "/entrar" });
+            }}
+          >
+            <button
+              type="submit"
+              className="inline-flex min-h-11 items-center rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-sm font-semibold text-[var(--muted)]"
+            >
+              Salir
+            </button>
+          </form>
         </section>
 
         <section className="space-y-3">

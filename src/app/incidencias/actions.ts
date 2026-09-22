@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { ensureDemoCommunity } from "@/lib/demo";
+import { requireMembership } from "@/lib/session";
 
 export async function createIncidencia(formData: FormData) {
   const title = String(formData.get("title") ?? "").trim();
@@ -14,11 +14,7 @@ export async function createIncidencia(formData: FormData) {
     throw new Error("Título y descripción son obligatorios.");
   }
 
-  const community = await ensureDemoCommunity();
-  const creator = await prisma.user.findFirst({
-    where: { email: "ana@demo.local" },
-  });
-  if (!creator) throw new Error("Usuario demo no encontrado.");
+  const { user, community } = await requireMembership();
 
   const count = await prisma.expediente.count({
     where: { communityId: community.id },
@@ -32,7 +28,7 @@ export async function createIncidencia(formData: FormData) {
       description,
       locationText: locationText || null,
       communityId: community.id,
-      creatorId: creator.id,
+      creatorId: user.id,
       status: "NUEVA",
       priority: "MEDIA",
       nextAction: "Asignar responsable",
@@ -42,9 +38,9 @@ export async function createIncidencia(formData: FormData) {
   await prisma.expedienteEvent.create({
     data: {
       expedienteId: expediente.id,
-      actorId: creator.id,
+      actorId: user.id,
       type: "CREADA",
-      message: `${creator.name} registró la incidencia.`,
+      message: `${user.name} registró la incidencia.`,
     },
   });
 

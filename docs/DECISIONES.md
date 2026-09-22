@@ -55,9 +55,9 @@ Fuera de v1 (después):
 
 ## Acceso y login (recomendación adoptada)
 
-- **Solo por invitación** al principio (comunidad cerrada).
-- Login: **enlace mágico por email** (sin contraseña que olvidar).
-  Opcional después: Google.
+- Acceso por **invitación** (o email bootstrap del primer gestor)
+- Login: **enlace mágico por email** (Auth.js)
+- En desarrollo el enlace se muestra en pantalla (sin SMTP)
 - Idioma: **español primero**, estructura preparada para más idiomas.
 
 ## Marca y diseño

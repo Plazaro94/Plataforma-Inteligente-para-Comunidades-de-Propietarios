@@ -38,7 +38,10 @@ export function CaseCard({ item }: CaseCardProps) {
           Prioridad: {priorityLabel[item.priority]}
         </span>
         <span className="rounded-md bg-[var(--bg)] px-2 py-1">
-          Resp.: {item.assignee?.user.name ?? "Sin asignar"}
+          Resp.:{" "}
+          {item.assignee
+            ? item.assignee.user.name || item.assignee.user.email
+            : "Sin asignar"}
         </span>
         <span className="rounded-md bg-[var(--bg)] px-2 py-1">Actividad {idle}</span>
       </div>

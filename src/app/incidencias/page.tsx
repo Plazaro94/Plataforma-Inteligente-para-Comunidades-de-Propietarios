@@ -1,13 +1,13 @@
 import { AppHeader } from "@/components/AppHeader";
 import { BottomNav } from "@/components/BottomNav";
 import { CaseCard } from "@/components/CaseCard";
-import { ensureDemoCommunity } from "@/lib/demo";
 import { prisma } from "@/lib/db";
+import { requireMembership } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
 export default async function IncidenciasPage() {
-  const community = await ensureDemoCommunity();
+  const { community } = await requireMembership();
   const items = await prisma.expediente.findMany({
     where: { communityId: community.id },
     include: {
@@ -20,9 +20,13 @@ export default async function IncidenciasPage() {
     <>
       <AppHeader title="Incidencias" subtitle="Transparencia total para la comunidad" />
       <main className="flex flex-1 flex-col gap-3 px-4 py-5">
-        {items.map((item) => (
-          <CaseCard key={item.id} item={item} />
-        ))}
+        {items.length === 0 ? (
+          <p className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface)] p-6 text-sm text-[var(--muted)]">
+            No hay incidencias todavía.
+          </p>
+        ) : (
+          items.map((item) => <CaseCard key={item.id} item={item} />)
+        )}
       </main>
       <BottomNav active="incidencias" />
     </>

@@ -3,6 +3,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { BottomNav } from "@/components/BottomNav";
 import { prisma } from "@/lib/db";
 import { caseStatusLabel, priorityLabel, roleLabel } from "@/lib/labels";
+import { requireMembership } from "@/lib/session";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -13,9 +14,10 @@ type PageProps = {
 };
 
 export default async function IncidenciaDetailPage({ params }: PageProps) {
+  const { community } = await requireMembership();
   const { id } = await params;
-  const item = await prisma.expediente.findUnique({
-    where: { id },
+  const item = await prisma.expediente.findFirst({
+    where: { id, communityId: community.id },
     include: {
       creator: true,
       assignee: { include: { user: true } },
@@ -29,6 +31,8 @@ export default async function IncidenciaDetailPage({ params }: PageProps) {
   });
 
   if (!item) notFound();
+
+  const creatorName = item.creator.name || item.creator.email;
 
   return (
     <>
@@ -55,7 +59,7 @@ export default async function IncidenciaDetailPage({ params }: PageProps) {
           </h2>
           <p className="mt-2 text-base font-semibold">
             {item.assignee
-              ? `${item.assignee.user.name} · ${roleLabel[item.assignee.role]}`
+              ? `${item.assignee.user.name || item.assignee.user.email} · ${roleLabel[item.assignee.role]}`
               : "Sin asignar"}
           </p>
           <p className="mt-3 text-sm">
@@ -100,7 +104,7 @@ export default async function IncidenciaDetailPage({ params }: PageProps) {
               <li key={event.id} className="border-l-2 border-[var(--brand)] pl-3">
                 <p className="text-sm font-medium">{event.message}</p>
                 <p className="mt-1 text-xs text-[var(--muted)]">
-                  {event.actor?.name ?? "Sistema"} ·{" "}
+                  {event.actor?.name || event.actor?.email || "Sistema"} ·{" "}
                   {format(event.createdAt, "d MMM yyyy HH:mm", { locale: es })}
                 </p>
               </li>
@@ -109,7 +113,7 @@ export default async function IncidenciaDetailPage({ params }: PageProps) {
         </section>
 
         <p className="text-xs text-[var(--muted)]">
-          Creada por {item.creator.name} ·{" "}
+          Creada por {creatorName} ·{" "}
           {format(item.createdAt, "d MMM yyyy", { locale: es })}
         </p>
       </main>
