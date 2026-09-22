@@ -79,7 +79,8 @@ async function ensureBootstrapMembership(userId: string, email: string) {
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   adapter: PrismaAdapter(prisma),
-  session: { strategy: "database" },
+  // JWT is required so Vercel Edge middleware can read the session.
+  session: { strategy: "jwt" },
   providers: [
     Nodemailer({
       server: process.env.EMAIL_SERVER || "smtp://127.0.0.1:1025",
@@ -114,12 +115,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async signIn({ user }) {
       if (!user.email) return false;
       return canAccess(user.email);
-    },
-    async session({ session, user }) {
-      if (session.user) {
-        session.user.id = user.id;
-      }
-      return session;
     },
   },
   events: {
