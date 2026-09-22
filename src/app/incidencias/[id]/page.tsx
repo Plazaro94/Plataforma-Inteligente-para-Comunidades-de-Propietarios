@@ -20,11 +20,20 @@ export const dynamic = "force-dynamic";
 
 type PageProps = {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{
+    guardado?: string;
+    comentario?: string;
+    adjunto?: string;
+  }>;
 };
 
-export default async function IncidenciaDetailPage({ params }: PageProps) {
+export default async function IncidenciaDetailPage({
+  params,
+  searchParams,
+}: PageProps) {
   const { community } = await requireMembership();
   const { id } = await params;
+  const flags = await searchParams;
 
   const [item, members, providers] = await Promise.all([
     prisma.expediente.findFirst({
@@ -56,20 +65,34 @@ export default async function IncidenciaDetailPage({ params }: PageProps) {
   const creatorName = item.creator.name || item.creator.email;
   const idleDays = daysSince(item.lastActivityAt);
   const stalled = item.status !== "CERRADA" && isStalled(item.lastActivityAt);
+  const flash =
+    flags.guardado === "1"
+      ? "Cambios guardados."
+      : flags.comentario === "1"
+        ? "Comentario publicado."
+        : flags.adjunto === "1"
+          ? "Adjunto subido."
+          : null;
 
   return (
     <>
       <AppHeader title={item.reference} subtitle={item.title} backHref="/incidencias" />
       <main className="flex flex-1 flex-col gap-4 px-4 py-5">
+        {flash ? (
+          <p className="rounded-2xl bg-[var(--brand-soft)] px-4 py-3 text-sm font-semibold text-[#0f766e]">
+            {flash}
+          </p>
+        ) : null}
+
         {stalled ? (
           <p className="rounded-2xl bg-[#fff4ed] px-4 py-3 text-sm font-semibold text-[var(--warn)]">
             Lleva {idleDays} días sin movimiento (umbral: {STALE_AFTER_DAYS} días).
           </p>
         ) : null}
 
-        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
+        <section className="rounded-2xl border border-[var(--border)] bg-white p-4">
           <div className="flex flex-wrap gap-2 text-xs">
-            <span className="rounded-full bg-[var(--brand-soft)] px-2.5 py-1 font-semibold text-[var(--brand)]">
+            <span className="rounded-full bg-[var(--brand-soft)] px-2.5 py-1 font-semibold text-[#0f766e]">
               {caseStatusLabel[item.status]}
             </span>
             <span className="rounded-full bg-[var(--bg)] px-2.5 py-1 font-semibold">
@@ -80,6 +103,24 @@ export default async function IncidenciaDetailPage({ params }: PageProps) {
           {item.locationText ? (
             <p className="mt-3 text-sm text-[var(--muted)]">📍 {item.locationText}</p>
           ) : null}
+          <div className="mt-4 space-y-1 text-sm">
+            <p>
+              <span className="font-semibold">Responsable: </span>
+              {item.assignee
+                ? `${item.assignee.user.name || item.assignee.user.email} · ${roleLabel[item.assignee.role]}`
+                : "Sin asignar"}
+            </p>
+            <p>
+              <span className="font-semibold">Siguiente: </span>
+              {item.nextAction ?? "Pendiente de definir"}
+            </p>
+            {item.provider ? (
+              <p>
+                <span className="font-semibold">Proveedor: </span>
+                {item.provider.name}
+              </p>
+            ) : null}
+          </div>
           {item.status === "BLOQUEADA" && item.blockedReason ? (
             <p className="mt-3 rounded-xl bg-[#fff4ed] px-3 py-2 text-sm text-[var(--warn)]">
               Bloqueada: {item.blockedReason}
@@ -87,12 +128,12 @@ export default async function IncidenciaDetailPage({ params }: PageProps) {
           ) : null}
         </section>
 
-        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
-          <h2 className="text-sm font-bold uppercase tracking-wide text-[var(--muted)]">
+        <details className="rounded-2xl border border-[var(--border)] bg-white p-4" open>
+          <summary className="cursor-pointer text-base font-bold">
             Mover el asunto
-          </h2>
+          </summary>
           <p className="mt-1 text-sm text-[var(--muted)]">
-            Responsable, estado y siguiente acción quedan registrados.
+            Cambia estado, responsable o siguiente paso. Queda en el historial.
           </p>
           <div className="mt-4">
             <ManageExpedienteForm
@@ -107,14 +148,14 @@ export default async function IncidenciaDetailPage({ params }: PageProps) {
               providers={providers}
             />
           </div>
-        </section>
+        </details>
 
-        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
-          <h2 className="text-sm font-bold uppercase tracking-wide text-[var(--muted)]">
-            Adjuntos
-          </h2>
+        <details className="rounded-2xl border border-[var(--border)] bg-white p-4">
+          <summary className="cursor-pointer text-base font-bold">
+            Adjuntos ({item.attachments.length})
+          </summary>
           {item.attachments.length === 0 ? (
-            <p className="mt-2 text-sm text-[var(--muted)]">
+            <p className="mt-3 text-sm text-[var(--muted)]">
               Aún no hay fotos, documentos ni presupuestos.
             </p>
           ) : (
@@ -125,7 +166,7 @@ export default async function IncidenciaDetailPage({ params }: PageProps) {
                   <li key={file.id}>
                     <Link
                       href={href}
-                      className="block rounded-xl bg-[var(--bg)] px-3 py-2 text-sm font-medium text-[var(--brand)]"
+                      className="block rounded-xl bg-[var(--bg)] px-3 py-2 text-sm font-medium text-[#0f766e]"
                       target={file.url ? "_blank" : undefined}
                     >
                       {attachmentKindLabel[file.kind]} · {file.fileName}
@@ -141,24 +182,20 @@ export default async function IncidenciaDetailPage({ params }: PageProps) {
           <div className="mt-4">
             <AttachmentForm expedienteId={item.id} />
           </div>
-        </section>
+        </details>
 
-        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
-          <h2 className="text-sm font-bold uppercase tracking-wide text-[var(--muted)]">
-            Comentario
-          </h2>
+        <details className="rounded-2xl border border-[var(--border)] bg-white p-4">
+          <summary className="cursor-pointer text-base font-bold">Comentar</summary>
           <div className="mt-3">
             <CommentForm expedienteId={item.id} />
           </div>
-        </section>
+        </details>
 
-        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
-          <h2 className="text-sm font-bold uppercase tracking-wide text-[var(--muted)]">
-            Historial
-          </h2>
+        <section className="rounded-2xl border border-[var(--border)] bg-white p-4">
+          <h2 className="text-base font-bold">Historial</h2>
           <ol className="mt-3 space-y-3">
             {item.events.map((event) => (
-              <li key={event.id} className="border-l-2 border-[var(--brand)] pl-3">
+              <li key={event.id} className="border-l-2 border-[#0f766e] pl-3">
                 <p className="text-sm font-medium">{event.message}</p>
                 <p className="mt-1 text-xs text-[var(--muted)]">
                   {event.actor?.name || event.actor?.email || "Sistema"} ·{" "}
@@ -172,9 +209,6 @@ export default async function IncidenciaDetailPage({ params }: PageProps) {
         <p className="text-xs text-[var(--muted)]">
           Creada por {creatorName} ·{" "}
           {format(item.createdAt, "d MMM yyyy", { locale: es })}
-          {item.assignee
-            ? ` · Resp. ${item.assignee.user.name || item.assignee.user.email} (${roleLabel[item.assignee.role]})`
-            : ""}
         </p>
       </main>
       <BottomNav active="incidencias" />

@@ -1,3 +1,6 @@
+"use client";
+
+import { useActionState } from "react";
 import {
   caseStatusLabel,
   priorityLabel,
@@ -11,9 +14,11 @@ import type {
   Role,
   User,
 } from "@prisma/client";
-import { updateExpediente } from "./actions";
+import { updateExpediente, type ActionState } from "./actions";
 
 type MemberOption = Membership & { user: User };
+
+const initial: ActionState = {};
 
 export function ManageExpedienteForm({
   expedienteId,
@@ -36,8 +41,10 @@ export function ManageExpedienteForm({
   members: MemberOption[];
   providers: Provider[];
 }) {
+  const [state, action, pending] = useActionState(updateExpediente, initial);
+
   return (
-    <form action={updateExpediente} className="space-y-3">
+    <form action={action} className="space-y-3">
       <input type="hidden" name="expedienteId" value={expedienteId} />
 
       <label className="block">
@@ -47,7 +54,7 @@ export function ManageExpedienteForm({
         <select
           name="status"
           defaultValue={status}
-          className="min-h-12 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3"
+          className="min-h-12 w-full rounded-xl border border-[var(--border)] bg-white px-3"
         >
           {Object.entries(caseStatusLabel).map(([value, label]) => (
             <option key={value} value={value}>
@@ -64,7 +71,7 @@ export function ManageExpedienteForm({
         <select
           name="priority"
           defaultValue={priority}
-          className="min-h-12 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3"
+          className="min-h-12 w-full rounded-xl border border-[var(--border)] bg-white px-3"
         >
           {Object.entries(priorityLabel).map(([value, label]) => (
             <option key={value} value={value}>
@@ -81,7 +88,7 @@ export function ManageExpedienteForm({
         <select
           name="assigneeId"
           defaultValue={assigneeId ?? ""}
-          className="min-h-12 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3"
+          className="min-h-12 w-full rounded-xl border border-[var(--border)] bg-white px-3"
         >
           <option value="">Sin asignar</option>
           {members.map((member) => (
@@ -100,7 +107,7 @@ export function ManageExpedienteForm({
         <select
           name="providerId"
           defaultValue={providerId ?? ""}
-          className="min-h-12 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3"
+          className="min-h-12 w-full rounded-xl border border-[var(--border)] bg-white px-3"
         >
           <option value="">Sin proveedor</option>
           {providers.map((provider) => (
@@ -119,7 +126,7 @@ export function ManageExpedienteForm({
           name="nextAction"
           defaultValue={nextAction ?? ""}
           placeholder="Ej. Pedir presupuesto al proveedor"
-          className="min-h-12 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3"
+          className="min-h-12 w-full rounded-xl border border-[var(--border)] bg-white px-3"
         />
       </label>
 
@@ -131,15 +138,22 @@ export function ManageExpedienteForm({
           name="blockedReason"
           defaultValue={blockedReason ?? ""}
           placeholder="Ej. Esperando aprobación"
-          className="min-h-12 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3"
+          className="min-h-12 w-full rounded-xl border border-[var(--border)] bg-white px-3"
         />
       </label>
 
+      {state.error ? (
+        <p className="rounded-xl bg-[#fef3f2] px-3 py-3 text-sm text-[var(--danger)]">
+          {state.error}
+        </p>
+      ) : null}
+
       <button
         type="submit"
-        className="inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-[var(--brand)] px-4 text-sm font-bold text-white"
+        disabled={pending}
+        className="inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-[#0f766e] px-4 text-sm font-bold text-white disabled:opacity-60"
       >
-        Guardar cambios
+        {pending ? "Guardando…" : "Guardar cambios"}
       </button>
     </form>
   );
