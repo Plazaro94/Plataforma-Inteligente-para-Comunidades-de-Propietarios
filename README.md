@@ -5,50 +5,57 @@ responsables claros e historial completo.
 
 > Nombre comercial pendiente. Placeholder interno: `comunidad-app`.
 
-## Qué hay ahora (esqueleto)
+## Qué hay ahora
 
-- Next.js 16 + TypeScript + Tailwind
-- Prisma + SQLite (local) → PostgreSQL en producción
-- Modelo de dominio: comunidad, miembros/roles, expedientes, eventos, adjuntos, proveedores, invitaciones
-- UI mobile-first con navegación inferior
-- Flujo real: login mágico, invitaciones, crear/listar/ver incidencias + timeline
-- Manifest PWA (instalable como acceso directo)
-- Decisiones de producto en `docs/DECISIONES.md` y `docs/DOMINIO.md`
+- Next.js 16 + TypeScript + Tailwind + PWA
+- Prisma + PostgreSQL (local con Docker o Neon)
+- Auth por invitación + enlace mágico
+- Expedientes: crear, listar, detalle, historial
+- Mover asunto: estado, prioridad, responsable, siguiente acción
+- Adjuntos: fotos, documentos y presupuestos (+ importe)
+- Comentarios visibles para la comunidad
+- Aviso de asuntos parados ≥ 3 días
+- Decisiones en `docs/DECISIONES.md`, deploy en `docs/DEPLOY.md`
 
 ## Arranque local
 
-1. Copia `.env.example` a `.env` y pon tu email en `BOOTSTRAP_ADMIN_EMAIL`
-   (ese email será el primer gestor de “Mi comunidad”).
-2. Instala y migra:
+1. Arranca Postgres:
+
+```bash
+docker compose up -d
+```
+
+2. Copia `.env.example` a `.env` y ajusta:
+
+```text
+DATABASE_URL="postgresql://comunidad:comunidad@localhost:5432/comunidad"
+AUTH_SECRET="cambia-esto"
+AUTH_URL="http://localhost:3000"
+BOOTSTRAP_ADMIN_EMAIL="tu@email.com"
+```
+
+3. Instala, migra y arranca:
 
 ```bash
 npm install
-npx prisma migrate dev
+npx prisma migrate deploy
 npm run dev
 ```
 
-3. Abre [http://localhost:3000/entrar](http://localhost:3000/entrar)
-4. Entra con el email bootstrap. En desarrollo verás el **enlace mágico** en pantalla
-   (no hace falta configurar SMTP todavía).
-5. Desde Inicio → **Invitar vecinos** genera enlaces para el resto.
-
-## Auth (v1)
-
-- Acceso solo por invitación (o email bootstrap)
-- Login por enlace mágico (Auth.js)
-- En local el enlace se muestra en `/entrar/enviado`
-- SMTP real opcional con `EMAIL_SERVER` / `EMAIL_FROM`
+4. Entra en [http://localhost:3000/entrar](http://localhost:3000/entrar) con el email bootstrap.
+   Sin SMTP verás el enlace mágico en pantalla.
 
 ## Próximos ladrillos
 
-1. Subida de fotos / documentos / presupuestos
-2. Asignar responsable y cambiar estado desde la UI
-3. Avisos de “días sin movimiento”
-4. Despliegue en Vercel + Postgres
+1. Ficha de proveedores (actuaciones en su nombre)
+2. Despliegue Vercel + Neon (ver `docs/DEPLOY.md`)
+3. Notificaciones push / email reales
+4. Vercel Blob para archivos en producción (`BLOB_READ_WRITE_TOKEN`)
 
 ## Scripts
 
 - `npm run dev` — desarrollo
-- `npm run build` — build producción
+- `npm run build` — build producción (incluye migraciones)
 - `npm run lint` — eslint
-- `npx prisma studio` — ver base de datos
+- `npm run db:studio` — Prisma Studio
+- `docker compose up -d` — Postgres local

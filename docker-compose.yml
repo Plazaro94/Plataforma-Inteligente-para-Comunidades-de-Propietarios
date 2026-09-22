@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: comunidad
+      POSTGRES_PASSWORD: comunidad
+      POSTGRES_DB: comunidad
+    volumes:
+      - comunidad_pg:/var/lib/postgresql/data
+
+volumes:
+  comunidad_pg:

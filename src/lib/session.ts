@@ -32,6 +32,29 @@ export async function requireMembership() {
   return { user, membership, community: membership.community };
 }
 
+export async function getMembershipOrNull() {
+  const session = await auth();
+  if (!session?.user?.id || !session.user.email) return null;
+
+  const user = {
+    id: session.user.id,
+    email: session.user.email,
+    name: session.user.name ?? session.user.email,
+  };
+
+  const membership = await prisma.membership.findFirst({
+    where: { userId: user.id },
+    include: {
+      community: true,
+      user: true,
+    },
+    orderBy: { createdAt: "asc" },
+  });
+
+  if (!membership) return null;
+  return { user, membership, community: membership.community };
+}
+
 export function canManageInvites(role: string) {
   return role === "GESTOR" || role === "PRESIDENTE" || role === "ADMIN_FINCAS";
 }

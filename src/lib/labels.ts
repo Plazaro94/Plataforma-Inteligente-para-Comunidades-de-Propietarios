@@ -23,3 +23,10 @@ export const roleLabel = {
   ADMIN_FINCAS: "Administración",
   GESTOR: "Gestor",
 } as const;
+
+export const attachmentKindLabel = {
+  FOTO: "Foto",
+  DOCUMENTO: "Documento",
+  PRESUPUESTO: "Presupuesto",
+  OTRO: "Otro",
+} as const;

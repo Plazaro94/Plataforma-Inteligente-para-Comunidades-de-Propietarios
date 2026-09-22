@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Expediente, Membership, User } from "@prisma/client";
 import { caseStatusLabel, priorityLabel } from "@/lib/labels";
+import { daysSince, isStalled } from "@/lib/expediente";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -15,11 +16,15 @@ export function CaseCard({ item }: CaseCardProps) {
     addSuffix: true,
     locale: es,
   });
+  const idleDays = daysSince(item.lastActivityAt);
+  const stalled = item.status !== "CERRADA" && isStalled(item.lastActivityAt);
 
   return (
     <Link
       href={`/incidencias/${item.id}`}
-      className="block rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-sm"
+      className={`block rounded-2xl border bg-[var(--surface)] p-4 shadow-sm ${
+        stalled ? "border-[var(--warn)]" : "border-[var(--border)]"
+      }`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
@@ -43,7 +48,13 @@ export function CaseCard({ item }: CaseCardProps) {
             ? item.assignee.user.name || item.assignee.user.email
             : "Sin asignar"}
         </span>
-        <span className="rounded-md bg-[var(--bg)] px-2 py-1">Actividad {idle}</span>
+        <span
+          className={`rounded-md px-2 py-1 ${
+            stalled ? "bg-[#fff4ed] font-semibold text-[var(--warn)]" : "bg-[var(--bg)]"
+          }`}
+        >
+          {stalled ? `${idleDays} días parado` : `Actividad ${idle}`}
+        </span>
       </div>
 
       {item.nextAction ? (

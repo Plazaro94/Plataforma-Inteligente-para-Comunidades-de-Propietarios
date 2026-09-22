@@ -7,7 +7,7 @@ export default function NuevaIncidenciaPage() {
     <>
       <AppHeader
         title="Nueva incidencia"
-        subtitle="Cuéntalo en una frase. Luego añadimos el resto."
+        subtitle="Foto + texto. El resto lo completamos después."
         backHref="/incidencias"
       />
       <main className="flex flex-1 flex-col px-4 py-5">
@@ -44,10 +44,16 @@ export default function NuevaIncidenciaPage() {
             />
           </label>
 
-          <p className="rounded-xl bg-[var(--brand-soft)] px-3 py-3 text-sm text-[var(--brand)]">
-            La foto y los presupuestos/documentos se añadirán en el siguiente paso del
-            esqueleto. Ahora priorizamos registrar y trazar el asunto.
-          </p>
+          <label className="block">
+            <span className="mb-1.5 block text-sm font-semibold">Foto (opcional)</span>
+            <input
+              type="file"
+              name="photo"
+              accept="image/*"
+              capture="environment"
+              className="block w-full text-sm"
+            />
+          </label>
 
           <button
             type="submit"

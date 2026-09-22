@@ -66,7 +66,9 @@ Fuera de v1 (después):
 - Visual: claro, limpio, móvil primero, sin ambigüedad.
 - PWA: web instalable en el móvil como acceso directo tipo app.
 - Hosting previsto: Vercel.
-- Base de datos local de desarrollo: SQLite; producción: PostgreSQL.
+- Base de datos: PostgreSQL (Docker en local, Neon/Vercel en producción).
+- Umbral de “parado”: **3 días** sin `lastActivityAt`.
+- Adjuntos locales en `/uploads`; en producción se puede usar Vercel Blob.
 
 ## Principios no negociables (v1)
 
