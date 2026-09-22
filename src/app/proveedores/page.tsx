@@ -24,6 +24,7 @@ export default async function ProveedoresPage() {
         title="Proveedores"
         subtitle="Fichas sin cuenta. Las actuaciones quedan en la comunidad."
         backHref="/"
+        showSignOut
       />
       <main className="flex flex-1 flex-col gap-5 px-4 py-5">
         {canEdit ? (

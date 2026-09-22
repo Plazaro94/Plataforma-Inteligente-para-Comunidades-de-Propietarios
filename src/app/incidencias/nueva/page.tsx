@@ -9,6 +9,7 @@ export default function NuevaIncidenciaPage() {
         title="Nueva incidencia"
         subtitle="Foto + texto. El resto lo completamos después."
         backHref="/incidencias"
+        showSignOut
       />
       <main className="flex flex-1 flex-col px-4 py-5">
         <form action={createIncidencia} className="flex flex-1 flex-col gap-4">

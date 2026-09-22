@@ -76,7 +76,12 @@ export default async function IncidenciaDetailPage({
 
   return (
     <>
-      <AppHeader title={item.reference} subtitle={item.title} backHref="/incidencias" />
+      <AppHeader
+        title={item.reference}
+        subtitle={item.title}
+        backHref="/incidencias"
+        showSignOut
+      />
       <main className="flex flex-1 flex-col gap-4 px-4 py-5">
         {flash ? (
           <p className="rounded-2xl bg-[var(--brand-soft)] px-4 py-3 text-sm font-semibold text-[#0f766e]">

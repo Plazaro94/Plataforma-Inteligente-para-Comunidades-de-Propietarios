@@ -28,6 +28,7 @@ export default async function InvitarPage() {
         title="Invitar"
         subtitle={community.name}
         backHref="/"
+        showSignOut
       />
       <main className="flex flex-1 flex-col gap-5 px-4 py-5">
         <InviteForm />

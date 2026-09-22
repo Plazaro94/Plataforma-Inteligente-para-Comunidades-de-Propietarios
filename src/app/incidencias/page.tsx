@@ -18,7 +18,11 @@ export default async function IncidenciasPage() {
 
   return (
     <>
-      <AppHeader title="Incidencias" subtitle="Transparencia total para la comunidad" />
+      <AppHeader
+        title="Incidencias"
+        subtitle="Transparencia total para la comunidad"
+        showSignOut
+      />
       <main className="flex flex-1 flex-col gap-3 px-4 py-5">
         {items.length === 0 ? (
           <p className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface)] p-6 text-sm text-[var(--muted)]">

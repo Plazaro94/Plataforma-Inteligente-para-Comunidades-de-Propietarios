@@ -6,7 +6,6 @@ import { prisma } from "@/lib/db";
 import { APP_TAGLINE, roleLabel } from "@/lib/labels";
 import { canManageInvites, requireMembership } from "@/lib/session";
 import { isStalled, STALE_AFTER_DAYS } from "@/lib/expediente";
-import { signOut } from "@/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +29,7 @@ export default async function HomePage() {
 
   return (
     <>
-      <AppHeader title={community.name} subtitle={APP_TAGLINE} />
+      <AppHeader title={community.name} subtitle={APP_TAGLINE} showSignOut />
       <main className="flex flex-1 flex-col gap-5 px-4 py-5">
         <section className="rounded-2xl bg-[var(--brand)] px-4 py-5">
           <p className="text-sm text-white/80">
@@ -91,19 +90,6 @@ export default async function HomePage() {
           >
             Proveedores
           </Link>
-          <form
-            action={async () => {
-              "use server";
-              await signOut({ redirectTo: "/entrar" });
-            }}
-          >
-            <button
-              type="submit"
-              className="inline-flex min-h-11 items-center rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-sm font-semibold text-[var(--muted)]"
-            >
-              Salir
-            </button>
-          </form>
         </section>
 
         <section className="space-y-3">
