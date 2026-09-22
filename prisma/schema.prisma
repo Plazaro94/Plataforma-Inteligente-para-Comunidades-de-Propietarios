@@ -1,0 +1,197 @@
+// Local SQLite for development. Production will use PostgreSQL.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  VECINO
+  PRESIDENTE
+  VICEPRESIDENTE
+  ADMIN_FINCAS
+  GESTOR
+}
+
+enum ExpedienteStatus {
+  NUEVA
+  EN_CURSO
+  BLOQUEADA
+  RESUELTA
+  CERRADA
+}
+
+enum Priority {
+  BAJA
+  MEDIA
+  ALTA
+  CRITICA
+}
+
+enum AttachmentKind {
+  FOTO
+  DOCUMENTO
+  PRESUPUESTO
+  OTRO
+}
+
+enum ExpedienteEventType {
+  CREADA
+  ESTADO_CAMBIADO
+  RESPONSABLE_ASIGNADO
+  SIGUIENTE_ACCION
+  COMENTARIO
+  ADJUNTO_ANADIDO
+  PROVEEDOR_VINCULADO
+  CERRADA
+  REABIERTA
+  SISTEMA
+}
+
+model User {
+  id             String            @id @default(cuid())
+  email          String            @unique
+  name           String
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  memberships    Membership[]
+  createdCases   Expediente[]      @relation("ExpedienteCreator")
+  events         ExpedienteEvent[]
+  invitations    Invitation[]      @relation("InvitationCreator")
+}
+
+model Community {
+  id          String       @id @default(cuid())
+  name        String
+  slug        String       @unique
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  memberships Membership[]
+  invitations Invitation[]
+  expedientes Expediente[]
+  providers   Provider[]
+  zones       Zone[]
+}
+
+model Membership {
+  id              String       @id @default(cuid())
+  role            Role         @default(VECINO)
+  userId          String
+  communityId     String
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  community       Community    @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  assignedCases   Expediente[] @relation("ExpedienteAssignee")
+
+  @@unique([userId, communityId])
+  @@index([communityId])
+}
+
+model Invitation {
+  id          String    @id @default(cuid())
+  email       String
+  role        Role      @default(VECINO)
+  token       String    @unique
+  acceptedAt  DateTime?
+  expiresAt   DateTime
+  communityId String
+  createdById String
+  createdAt   DateTime  @default(now())
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  createdBy   User      @relation("InvitationCreator", fields: [createdById], references: [id])
+
+  @@index([communityId, email])
+}
+
+model Zone {
+  id          String       @id @default(cuid())
+  name        String
+  communityId String
+  community   Community    @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  expedientes Expediente[]
+
+  @@unique([communityId, name])
+}
+
+model Provider {
+  id          String       @id @default(cuid())
+  name        String
+  phone       String?
+  email       String?
+  notes       String?
+  communityId String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  community   Community    @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  expedientes Expediente[]
+
+  @@index([communityId])
+}
+
+model Expediente {
+  id             String            @id @default(cuid())
+  reference      String
+  title          String
+  description    String
+  locationText   String?
+  status         ExpedienteStatus  @default(NUEVA)
+  priority       Priority          @default(MEDIA)
+  nextAction     String?
+  blockedReason  String?
+  lastActivityAt DateTime          @default(now())
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  closedAt       DateTime?
+  communityId    String
+  creatorId      String
+  assigneeId     String?
+  zoneId         String?
+  providerId     String?
+  community      Community         @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  creator        User              @relation("ExpedienteCreator", fields: [creatorId], references: [id])
+  assignee       Membership?       @relation("ExpedienteAssignee", fields: [assigneeId], references: [id])
+  zone           Zone?             @relation(fields: [zoneId], references: [id])
+  provider       Provider?         @relation(fields: [providerId], references: [id])
+  events         ExpedienteEvent[]
+  attachments    Attachment[]
+
+  @@unique([communityId, reference])
+  @@index([communityId, status])
+  @@index([assigneeId])
+  @@index([lastActivityAt])
+}
+
+model ExpedienteEvent {
+  id            String              @id @default(cuid())
+  type          ExpedienteEventType
+  message       String
+  metaJson      String?
+  createdAt     DateTime            @default(now())
+  expedienteId  String
+  actorId       String?
+  expediente    Expediente          @relation(fields: [expedienteId], references: [id], onDelete: Cascade)
+  actor         User?               @relation(fields: [actorId], references: [id])
+
+  @@index([expedienteId, createdAt])
+}
+
+model Attachment {
+  id           String         @id @default(cuid())
+  kind         AttachmentKind @default(OTRO)
+  fileName     String
+  mimeType     String
+  sizeBytes    Int
+  storageKey   String
+  url          String?
+  amountCents  Int?
+  createdAt    DateTime       @default(now())
+  expedienteId String
+  expediente   Expediente     @relation(fields: [expedienteId], references: [id], onDelete: Cascade)
+
+  @@index([expedienteId])
+}
